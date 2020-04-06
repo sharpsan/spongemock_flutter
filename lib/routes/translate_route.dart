@@ -10,30 +10,32 @@ class TranslateRoute extends StatefulWidget {
 class _TranslateRouteState extends State<TranslateRoute> {
   TextEditingController _textFieldController;
   TranslateService _translateService;
-  String _text;
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // text is typed, deleted, or pasted...
   void onTextChange() {
-    // textField is empty
     if (_textFieldController.text.length == 0) {
       {
         _clear();
         return;
       }
     }
-    _updateText(_textFieldController.text);
+    setState(() {
+      _translateService.text = _textFieldController.text;
+    });
   }
 
   void _clear() {
     _textFieldController.clear();
-    _translateService.clear();
-    setState(() => _text = '');
+    setState(() {
+      _translateService.clear();
+    });
   }
 
   void _reroll() {
-    _translateService.reroll();
-    setState(() => _text = _translateService.translation);
+    setState(() {
+      _translateService.reroll();
+    });
   }
 
   void _showSnackBar(String message) {
@@ -53,20 +55,11 @@ class _TranslateRouteState extends State<TranslateRoute> {
         .whenComplete(() => _showSnackBar('Translation copied to clipboard'));
   }
 
-  void _updateText(String text) {
-    if (text.length == 0 || text == null) {
-      return;
-    }
-    _translateService.text = text;
-    _translateService.translate();
-    setState(() => _text = _translateService.translation);
-  }
-
   @override
   void initState() {
+    _translateService = TranslateService();
     _textFieldController = TextEditingController();
     _textFieldController.addListener(onTextChange);
-    _translateService = TranslateService();
     super.initState();
   }
 
@@ -116,7 +109,7 @@ class _TranslateRouteState extends State<TranslateRoute> {
                 ],
               ),
               SizedBox(height: 20),
-              (_text == null || _text.length == 0)
+              (_translateService.translation == null)
                   ? Container()
                   : Text(
                       'Preview:',
@@ -130,7 +123,7 @@ class _TranslateRouteState extends State<TranslateRoute> {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  _text ?? '',
+                  _translateService.translation ?? '',
                   style: TextStyle(
                     fontSize: 16,
                   ),

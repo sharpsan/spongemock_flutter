@@ -8,6 +8,8 @@ class TranslateService {
   String _translation;
 
   String get translation => _translation;
+
+  String get originalText => _text;
   
   set text(String text) {
     _text = text;

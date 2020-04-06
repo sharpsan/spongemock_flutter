@@ -7,7 +7,8 @@ class TranslateRoute extends StatefulWidget {
   _TranslateRouteState createState() => _TranslateRouteState();
 }
 
-class _TranslateRouteState extends State<TranslateRoute> {
+class _TranslateRouteState extends State<TranslateRoute>
+    with WidgetsBindingObserver {
   GlobalKey<ScaffoldState> _scaffoldKey;
   TextEditingController _textFieldController;
   FocusNode _textFieldFocusNode;
@@ -63,20 +64,37 @@ class _TranslateRouteState extends State<TranslateRoute> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _scaffoldKey = GlobalKey<ScaffoldState>();
     _translateService = TranslateService();
     _textFieldController = TextEditingController();
     _textFieldController.addListener(onTextChange);
     _textFieldFocusNode = FocusNode();
+    // focus textField
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusScope.of(context).requestFocus(_textFieldFocusNode);
     });
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // focus textField
+      _textFieldController.text = _translateService.originalText;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        FocusScope.of(context).requestFocus(_textFieldFocusNode);
+      });
+    } else if (state == AppLifecycleState.paused) {
+      // clear focus
+      FocusScope.of(context).requestFocus(FocusNode());
+    }
+  }
+
+  @override
   void dispose() {
     _textFieldController.dispose();
     _textFieldFocusNode.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:spongemock_flutter/routes/translate_route.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override

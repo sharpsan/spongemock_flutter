@@ -8,11 +8,13 @@ class TranslateService {
   String _translation;
 
   String get translation => _translation;
+  
   set text(String text) {
     _text = text;
     _translate();
   }
 
+  // re-translate text with a new case history
   void reroll() {
     _caseHistory.clear();
     _translate();
@@ -24,6 +26,12 @@ class TranslateService {
     _translation = null;
   }
 
+  // take text and randomly translate each character 
+  // to either uppercase or lowercase
+  //
+  // case history is stored for each position as this
+  // method is reused to keep resulting text from
+  // getting rerolled
   void _translate() {
     Random _random = Random();
     int index = 0;

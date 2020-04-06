@@ -8,9 +8,10 @@ class TranslateRoute extends StatefulWidget {
 }
 
 class _TranslateRouteState extends State<TranslateRoute> {
+  GlobalKey<ScaffoldState> _scaffoldKey;
   TextEditingController _textFieldController;
+  FocusNode _textFieldFocusNode;
   TranslateService _translateService;
-  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // text is typed, deleted, or pasted...
   void onTextChange() {
@@ -25,6 +26,7 @@ class _TranslateRouteState extends State<TranslateRoute> {
     });
   }
 
+  // handle clear button press
   void _clear() {
     _textFieldController.clear();
     setState(() {
@@ -32,12 +34,14 @@ class _TranslateRouteState extends State<TranslateRoute> {
     });
   }
 
+  // handle reroll button press
   void _reroll() {
     setState(() {
       _translateService.reroll();
     });
   }
 
+  // show snackbar message
   void _showSnackBar(String message) {
     SnackBar snackbar = SnackBar(
       content: Text(message ?? ''),
@@ -50,6 +54,7 @@ class _TranslateRouteState extends State<TranslateRoute> {
     _scaffoldKey.currentState.showSnackBar(snackbar);
   }
 
+  // handle copy button press
   void _copy() {
     Clipboard.setData(ClipboardData(text: _translateService.translation))
         .whenComplete(() => _showSnackBar('Translation copied to clipboard'));
@@ -57,15 +62,21 @@ class _TranslateRouteState extends State<TranslateRoute> {
 
   @override
   void initState() {
+    super.initState();
+    _scaffoldKey = GlobalKey<ScaffoldState>();
     _translateService = TranslateService();
     _textFieldController = TextEditingController();
     _textFieldController.addListener(onTextChange);
-    super.initState();
+    _textFieldFocusNode = FocusNode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(_textFieldFocusNode);
+    });
   }
 
   @override
   void dispose() {
     _textFieldController.dispose();
+    _textFieldFocusNode.dispose();
     super.dispose();
   }
 
@@ -83,6 +94,8 @@ class _TranslateRouteState extends State<TranslateRoute> {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextField(
+                  focusNode: _textFieldFocusNode,
+                  //autofocus: true, //TODO: https://github.com/flutter/flutter/issues/52221
                   controller: _textFieldController,
                   minLines: 4,
                   maxLines: 4,

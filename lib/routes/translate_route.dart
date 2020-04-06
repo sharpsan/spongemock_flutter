@@ -15,15 +15,14 @@ class _TranslateRouteState extends State<TranslateRoute> {
 
   // text is typed, deleted, or pasted...
   void onTextChange() {
+    // textField is empty
     if (_textFieldController.text.length == 0) {
-      // textField is empty
       {
         _clear();
         return;
       }
     }
     _updateText(_textFieldController.text);
-    //print(_translateService.translation);
   }
 
   void _clear() {
@@ -34,7 +33,6 @@ class _TranslateRouteState extends State<TranslateRoute> {
 
   void _reroll() {
     _translateService.reroll();
-    _translateService.translate();
     setState(() => _text = _translateService.translation);
   }
 

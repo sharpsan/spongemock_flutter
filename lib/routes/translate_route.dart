@@ -37,7 +37,7 @@ class _TranslateRouteState extends State<TranslateRoute>
   // handle check/submit button press
   void _submit() {
     if (_textFieldController.text.length == 0) {
-      _showSnackBar('Please enter a message.');
+      _showSnackBar('Please type some text.');
       return;
     }
     setState(() {
@@ -137,7 +137,6 @@ class _TranslateRouteState extends State<TranslateRoute>
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      resizeToAvoidBottomInset: false,
       body: NeumorphicBackground(
         child: SafeArea(
           child: Column(
@@ -157,6 +156,7 @@ class _TranslateRouteState extends State<TranslateRoute>
               ),
               SizedBox(height: 15),
               Flexible(
+                flex: 2,
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 32.0),
                   child: FlipView(
@@ -209,6 +209,7 @@ class _TranslateRouteState extends State<TranslateRoute>
                 height: 30,
               ),
               Flexible(
+                flex: 1,
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 32.0),
                   child: _flippedView == FlippedView.front

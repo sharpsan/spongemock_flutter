@@ -12,6 +12,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Spongemock',
+      theme: ThemeData(
+        primarySwatch: Colors.blueGrey,
+      ),
       home: NeumorphicTheme(
         usedTheme: UsedTheme.LIGHT,
         theme: NeumorphicThemeData(

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_flip_view/flutter_flip_view.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:spongemock_flutter/components/neumorphic/n_app_bar/n_app_bar.dart';
+import 'package:spongemock_flutter/components/neumorphic/n_icon_button/n_icon_button.dart';
 import 'package:spongemock_flutter/services/translate_service.dart';
+import 'package:sweetsheet/sweetsheet.dart';
 
 enum FlippedView { front, back }
 
@@ -20,30 +23,33 @@ class _TranslateRouteState extends State<TranslateRoute>
   AnimationController _animationController;
   Animation<double> _curvedAnimation;
   FlippedView _flippedView = FlippedView.front;
-
-  // // text is typed, deleted, or pasted...
-  // void _onTextChange() {
-  //   if (_textFieldController.text.length == 0) {
-  //     {
-  //       _clear();
-  //       return;
-  //     }
-  //   }
-  //   setState(() {
-  //     _translateService.text = _textFieldController.text;
-  //   });
-  // }
+  SweetSheet _sweetSheet;
+  bool _themeToggleValue;
 
   // handle check/submit button press
   void _submit() {
     if (_textFieldController.text.length == 0) {
-      _showSnackBar('Please type some text.');
+      _showSnackBar(
+        title: 'Try again',
+        description: 'Please type some text first.',
+      );
       return;
     }
+    // process translation and assign result
     setState(() {
       _translateService.text = _textFieldController.text;
     });
+    // flip view
     _flip(FlippedView.back);
+    // clear [TextField] focus
+    _clearFocus();
+  }
+
+  // handle edit button press
+  void _edit() {
+    // flip view
+    _flip(FlippedView.front);
+    _focusTextField();
   }
 
   // handle clear button press
@@ -61,23 +67,43 @@ class _TranslateRouteState extends State<TranslateRoute>
     });
   }
 
-  // show snackbar message
-  void _showSnackBar(String message) {
-    SnackBar snackbar = SnackBar(
-      content: Text(message ?? ''),
-      action: SnackBarAction(
-        label: 'Okay',
-        onPressed: () {},
-      ),
-    );
-    _scaffoldKey.currentState.removeCurrentSnackBar();
-    _scaffoldKey.currentState.showSnackBar(snackbar);
-  }
-
   // handle copy button press
   void _copy() {
+    // copy to clipboard and notify user
     Clipboard.setData(ClipboardData(text: _translateService.translation))
-        .whenComplete(() => _showSnackBar('Translation copied to clipboard'));
+        .whenComplete(
+      () => _showSnackBar(
+        title: 'Copied',
+        description: 'Translation copied to clipboard',
+      ),
+    );
+  }
+
+  // show snackbar message
+  void _showSnackBar({
+    @required String title,
+    @required String description,
+  }) {
+    _sweetSheet.show(
+      context: context,
+      title: Text(
+        title,
+        style: TextStyle(color: Colors.white),
+      ),
+      description: Text(
+        description,
+        style: TextStyle(color: Colors.white),
+      ),
+      color: CustomSheetColor(
+        main: NeumorphicTheme.of(context).current.accentColor,
+        accent: NeumorphicTheme.of(context).current.accentColor,
+      ),
+      positive: SweetSheetAction(
+        title: "Okay".toUpperCase(),
+        color: Colors.white,
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+    );
   }
 
   // flip [FlipView] to other side
@@ -91,36 +117,64 @@ class _TranslateRouteState extends State<TranslateRoute>
     }
   }
 
+  void _changeTheme(UsedTheme usedTheme) {
+    NeumorphicTheme.of(context).usedTheme = usedTheme;
+    bool toggleThemeValue;
+    if (usedTheme == UsedTheme.DARK) {
+      toggleThemeValue = true;
+    } else if (usedTheme == UsedTheme.LIGHT) {
+      toggleThemeValue = false;
+    } else {
+      return;
+    }
+    setState(() => _themeToggleValue = toggleThemeValue);
+  }
+
+  void _focusTextField() {
+    if (_flippedView == FlippedView.back) {
+      print('back');
+      return;
+    }
+    print('front');
+    FocusScope.of(context).requestFocus(_textFieldFocusNode);
+  }
+
+  // clear [TextField] focus
+  void _clearFocus() {
+    FocusScope.of(context).requestFocus(FocusNode());
+  }
+
   @override
   void initState() {
     super.initState();
+    print('calling initState...');
     WidgetsBinding.instance.addObserver(this);
     _scaffoldKey = GlobalKey<ScaffoldState>();
     _translateService = TranslateService();
     _textFieldController = TextEditingController();
-    //_textFieldController.addListener(_onTextChange);
     _textFieldFocusNode = FocusNode();
     _animationController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 500));
     _curvedAnimation =
         CurvedAnimation(parent: _animationController, curve: Curves.easeInOut);
-    // focus textField
+    _sweetSheet = SweetSheet();
+    // run after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      FocusScope.of(context).requestFocus(_textFieldFocusNode);
+      _focusTextField();
     });
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    print('calling didChangeAppLifecycleState...');
     if (state == AppLifecycleState.resumed) {
       // focus textField
       _textFieldController.text = _translateService.originalText;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        FocusScope.of(context).requestFocus(_textFieldFocusNode);
+        _focusTextField();
       });
     } else if (state == AppLifecycleState.paused) {
-      // clear focus
-      FocusScope.of(context).requestFocus(FocusNode());
+      _clearFocus();
     }
   }
 
@@ -135,24 +189,28 @@ class _TranslateRouteState extends State<TranslateRoute>
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // DEBUGGING
+      // set theme
+      //NeumorphicTheme.of(context).usedTheme = UsedTheme.DARK;
+    });
     return Scaffold(
       key: _scaffoldKey,
       body: NeumorphicBackground(
         child: SafeArea(
           child: Column(
             children: <Widget>[
-              Neumorphic(
-                child: AppBar(
-                  centerTitle: true,
-                  iconTheme: IconThemeData.fallback(),
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  title: Text(
-                    "Spongemock",
-                    style: TextStyle(color: Colors.black),
-                  ),
-                ),
-                style: NeumorphicStyle(depth: -8),
+              NAppBar(
+                title: "Spongemock",
+                onThemeToggleChanged: (value) {
+                  // enabled == dark theme
+                  if (value) {
+                    _changeTheme(UsedTheme.DARK);
+                  } else {
+                    _changeTheme(UsedTheme.LIGHT);
+                  }
+                },
+                themeToggleValue: _themeToggleValue ?? false,
               ),
               SizedBox(height: 15),
               Flexible(
@@ -166,7 +224,8 @@ class _TranslateRouteState extends State<TranslateRoute>
                         borderRadius: BorderRadius.circular(12),
                       ),
                       style: NeumorphicStyle(
-                          depth: NeumorphicTheme.embossDepth(context)),
+                        depth: NeumorphicTheme.embossDepth(context),
+                      ),
                       padding: EdgeInsets.all(20),
                       child: TextField(
                         controller: _textFieldController,
@@ -176,10 +235,18 @@ class _TranslateRouteState extends State<TranslateRoute>
                         maxLines: null,
                         minLines: null,
                         decoration: InputDecoration.collapsed(
-                            hintText: 'Type or paste text...'),
+                          hintText: 'Type or paste text...',
+                          hintStyle: TextStyle(
+                            color: NeumorphicTheme.of(context)
+                                .current
+                                .defaultTextColor,
+                          ),
+                        ),
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
-                          color: NeumorphicTheme.defaultTextColor(context),
+                          color: NeumorphicTheme.of(context)
+                              .current
+                              .defaultTextColor,
                         ),
                       ),
                     ),
@@ -189,14 +256,17 @@ class _TranslateRouteState extends State<TranslateRoute>
                       child: Neumorphic(
                         padding: EdgeInsets.all(20),
                         boxShape: NeumorphicBoxShape.roundRect(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         style: NeumorphicStyle(),
                         child: SingleChildScrollView(
                           child: Text(
                             _translateService.translation ?? '',
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
-                              color: NeumorphicTheme.defaultTextColor(context),
+                              color: NeumorphicTheme.of(context)
+                                  .current
+                                  .defaultTextColor,
                             ),
                           ),
                         ),
@@ -216,33 +286,33 @@ class _TranslateRouteState extends State<TranslateRoute>
                       ? ButtonBar(
                           alignment: MainAxisAlignment.end,
                           children: <Widget>[
-                            NeumorphicButton(
-                              child: Icon(Icons.clear),
-                              onClick: _clear,
+                            NIconButton(
+                              icon: Icons.clear,
+                              onPressed: _clear,
                             ),
                             SizedBox(width: 10),
-                            NeumorphicButton(
-                              child: Icon(Icons.check),
-                              onClick: _submit,
+                            NIconButton(
+                              icon: Icons.check,
+                              onPressed: _submit,
                             ),
                           ],
                         )
                       : ButtonBar(
                           alignment: MainAxisAlignment.end,
                           children: <Widget>[
-                            NeumorphicButton(
-                              child: Icon(Icons.edit),
-                              onClick: () => _flip(FlippedView.front),
+                            NIconButton(
+                              icon: Icons.edit,
+                              onPressed: _edit,
                             ),
                             SizedBox(width: 10),
-                            NeumorphicButton(
-                              child: Icon(Icons.refresh),
-                              onClick: _reroll,
+                            NIconButton(
+                              icon: Icons.refresh,
+                              onPressed: _reroll,
                             ),
                             SizedBox(width: 10),
-                            NeumorphicButton(
-                              child: Icon(Icons.content_copy),
-                              onClick: _copy,
+                            NIconButton(
+                              icon: Icons.content_copy,
+                              onPressed: _copy,
                             ),
                           ],
                         ),

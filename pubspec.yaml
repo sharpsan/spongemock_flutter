@@ -25,6 +25,7 @@ dependencies:
   cupertino_icons: ^0.1.2
   flutter_flip_view: ^1.0.3
   flutter_neumorphic: ^1.0.4
+  sweetsheet: ^0.2.0
 
 dev_dependencies:
   flutter_test:

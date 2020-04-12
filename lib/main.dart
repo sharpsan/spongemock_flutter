@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:spongemock_flutter/routes/translate_route.dart';
 
 void main() {
@@ -12,14 +13,27 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Spongemock',
       theme: ThemeData(
-        brightness: Brightness.light,
-        primarySwatch: Colors.purple,
+        primarySwatch: Colors.blueGrey,
       ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.purple,
+      home: NeumorphicTheme(
+        usedTheme: UsedTheme.SYSTEM,
+        theme: NeumorphicThemeData(
+          defaultTextColor: Color(0xFF3E3E3E),
+          accentColor: Colors.blueGrey,
+          variantColor: Colors.black38,
+          depth: 8,
+          intensity: 0.65,
+        ),
+        darkTheme: NeumorphicThemeData(
+          baseColor: Color(0xFF3E3E3E),
+          accentColor: Colors.blueGrey,
+          intensity: 0.4,
+          lightSource: LightSource.topLeft,
+          depth: 4,
+          defaultTextColor: Color(0xFFEAEAEA),
+        ),
+        child: TranslateRoute(),
       ),
-      home: TranslateRoute(),
     );
   }
 }

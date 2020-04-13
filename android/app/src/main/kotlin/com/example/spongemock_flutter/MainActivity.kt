@@ -1,4 +1,4 @@
-package com.example.spongemock_flutter
+package com.sharpsan.spongemock
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity

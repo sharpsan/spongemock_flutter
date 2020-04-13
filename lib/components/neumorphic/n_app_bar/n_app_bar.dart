@@ -1,3 +1,4 @@
+import 'package:clay_containers/clay_containers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
@@ -21,21 +22,27 @@ class _NAppBarState extends State<NAppBar> {
       centerTitle: true,
       backgroundColor: Colors.transparent,
       elevation: 0,
-      title: Text(
-        widget.title,
-        style: TextStyle(
-          color: NeumorphicTheme.of(context).current.defaultTextColor,
+      title: ClayContainer(
+        color: NeumorphicTheme.of(context).current.baseColor,
+        depth: 0,
+        child: ClayText(
+          widget.title,
+          size: 30,
+          emboss: true,
+          color: NeumorphicTheme.of(context).isUsingDark
+              ? Colors.grey[700]
+              : NeumorphicTheme.of(context).current.baseColor,
         ),
       ),
       actions: <Widget>[
         Row(
           children: <Widget>[
-            NeumorphicTheme.of(context).isUsingDark == false
-                ? Icon(
+            NeumorphicTheme.of(context).isUsingDark
+                ? Container()
+                : Icon(
                     Icons.wb_sunny,
                     color: NeumorphicTheme.of(context).current.defaultTextColor,
-                  )
-                : Container(),
+                  ),
             Padding(
               padding: const EdgeInsets.all(14.0),
               child: NeumorphicSwitch(
@@ -49,9 +56,16 @@ class _NAppBarState extends State<NAppBar> {
               ),
             ),
             NeumorphicTheme.of(context).isUsingDark
-                ? Icon(
-                    Icons.brightness_3,
-                    color: NeumorphicTheme.of(context).current.defaultTextColor,
+                ? Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.brightness_3,
+                        color: NeumorphicTheme.of(context)
+                            .current
+                            .defaultTextColor,
+                      ),
+                      SizedBox(width: 8),
+                    ],
                   )
                 : Container(),
           ],

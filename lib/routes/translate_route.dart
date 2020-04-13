@@ -3,10 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_flip_view/flutter_flip_view.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spongemock_flutter/components/neumorphic/n_app_bar/n_app_bar.dart';
 import 'package:spongemock_flutter/components/neumorphic/n_icon_button/n_icon_button.dart';
 import 'package:spongemock_flutter/services/translate_service.dart';
 import 'package:sweetsheet/sweetsheet.dart';
+import 'package:spongemock_flutter/constants/preference_keys.dart';
 
 enum FlippedView { front, back }
 
@@ -27,6 +29,7 @@ class _TranslateRouteState extends State<TranslateRoute>
   SweetSheet _sweetSheet;
   bool _themeToggleValue;
   bool _keyboardIsVisible;
+  Future<SharedPreferences> _sharedPreferences;
 
   // handle check/submit button press
   void _submit() {
@@ -119,19 +122,6 @@ class _TranslateRouteState extends State<TranslateRoute>
     }
   }
 
-  void _changeTheme(UsedTheme usedTheme) {
-    NeumorphicTheme.of(context).usedTheme = usedTheme;
-    bool toggleThemeValue;
-    if (usedTheme == UsedTheme.DARK) {
-      toggleThemeValue = true;
-    } else if (usedTheme == UsedTheme.LIGHT) {
-      toggleThemeValue = false;
-    } else {
-      return;
-    }
-    setState(() => _themeToggleValue = toggleThemeValue);
-  }
-
   void _focusTextField() {
     if (_flippedView == FlippedView.back) {
       return;
@@ -195,6 +185,48 @@ class _TranslateRouteState extends State<TranslateRoute>
     }
   }
 
+    void _changeTheme(UsedTheme usedTheme) {
+    NeumorphicTheme.of(context).usedTheme = usedTheme;
+    bool toggleThemeValue;
+    if (usedTheme == UsedTheme.DARK) {
+      toggleThemeValue = true;
+    } else if (usedTheme == UsedTheme.LIGHT) {
+      toggleThemeValue = false;
+    } else {
+      return;
+    }
+    setState(() => _themeToggleValue = toggleThemeValue);
+  }
+
+  Future<bool> _getThemePrefIsDarkTheme() async {
+    return _sharedPreferences.then(
+      (prefs) => prefs.getBool(PreferenceKeys.IS_DARK_THEME),
+    );
+  }
+
+  Future<bool> _saveThemePref(UsedTheme theme) async {
+    bool isDarkTheme = theme == UsedTheme.DARK ? true : false;
+    return _sharedPreferences.then(
+      (prefs) => prefs.setBool(
+        PreferenceKeys.IS_DARK_THEME,
+        isDarkTheme,
+      ),
+    );
+  }
+
+  // load preferred theme from settings and apply
+  Future _initTheme() async {
+    bool themePrefIsDarkTheme = await _getThemePrefIsDarkTheme();
+    if (themePrefIsDarkTheme == null) {
+      return null;
+    }
+    if (themePrefIsDarkTheme && !NeumorphicTheme.of(context).isUsingDark) {
+      _changeTheme(UsedTheme.DARK);
+    } else if (NeumorphicTheme.of(context).isUsingDark) {
+      _changeTheme(UsedTheme.LIGHT);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -209,6 +241,7 @@ class _TranslateRouteState extends State<TranslateRoute>
     _curvedAnimation =
         CurvedAnimation(parent: _animationController, curve: Curves.easeInOut);
     _sweetSheet = SweetSheet();
+    _sharedPreferences = SharedPreferences.getInstance();
     // add listener for keyboard show/hide
     KeyboardVisibilityNotification().addNewListener(
       onChange: (bool visible) {
@@ -217,6 +250,9 @@ class _TranslateRouteState extends State<TranslateRoute>
     );
     // run after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // set theme from preferences
+      _initTheme();
+      // autofocus [TextField]
       _focusTextField();
     });
   }
@@ -262,8 +298,10 @@ class _TranslateRouteState extends State<TranslateRoute>
                   // enabled == dark theme
                   if (value) {
                     _changeTheme(UsedTheme.DARK);
+                    _saveThemePref(UsedTheme.DARK);
                   } else {
                     _changeTheme(UsedTheme.LIGHT);
+                    _saveThemePref(UsedTheme.LIGHT);
                   }
                 },
                 themeToggleValue: _themeToggleValue ?? false,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_flip_view/flutter_flip_view.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:spongemock_flutter/components/neumorphic/n_app_bar/n_app_bar.dart';
 import 'package:spongemock_flutter/components/neumorphic/n_icon_button/n_icon_button.dart';
@@ -25,6 +26,7 @@ class _TranslateRouteState extends State<TranslateRoute>
   FlippedView _flippedView = FlippedView.front;
   SweetSheet _sweetSheet;
   bool _themeToggleValue;
+  bool _keyboardIsVisible;
 
   // handle check/submit button press
   void _submit() {
@@ -74,7 +76,7 @@ class _TranslateRouteState extends State<TranslateRoute>
         .whenComplete(
       () => _showSnackBar(
         title: 'Copied',
-        description: 'Translation copied to clipboard',
+        description: 'Translation copied to clipboard!',
       ),
     );
   }
@@ -132,10 +134,8 @@ class _TranslateRouteState extends State<TranslateRoute>
 
   void _focusTextField() {
     if (_flippedView == FlippedView.back) {
-      print('back');
       return;
     }
-    print('front');
     FocusScope.of(context).requestFocus(_textFieldFocusNode);
   }
 
@@ -144,11 +144,62 @@ class _TranslateRouteState extends State<TranslateRoute>
     FocusScope.of(context).requestFocus(FocusNode());
   }
 
+  void _onKeyboardVisibilityChanged(bool visible) {
+    setState(() => _keyboardIsVisible = visible);
+  }
+
+  // build widget buttons for editing, rerolling, clearing, etc...
+  Widget _buildButtonBar(FlippedView flippedView) {
+    if (flippedView == FlippedView.front) {
+      return ButtonBar(
+        alignment: MainAxisAlignment.end,
+        children: <Widget>[
+          NIconButton(
+            icon: Icons.clear,
+            onPressed: _clear,
+            tooltipMessage: "Clear",
+          ),
+          SizedBox(width: 10),
+          NIconButton(
+            icon: Icons.check,
+            onPressed: _submit,
+            tooltipMessage: "Translate",
+          ),
+        ],
+      );
+    } else if (flippedView == FlippedView.back) {
+      return ButtonBar(
+        alignment: MainAxisAlignment.end,
+        children: <Widget>[
+          NIconButton(
+            icon: Icons.edit,
+            onPressed: _edit,
+            tooltipMessage: 'Edit',
+          ),
+          SizedBox(width: 10),
+          NIconButton(
+            icon: Icons.refresh,
+            onPressed: _reroll,
+            tooltipMessage: "Reroll",
+          ),
+          SizedBox(width: 10),
+          NIconButton(
+            icon: Icons.content_copy,
+            onPressed: _copy,
+            tooltipMessage: "Copy",
+          ),
+        ],
+      );
+    } else {
+      return Container();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    print('calling initState...');
     WidgetsBinding.instance.addObserver(this);
+    _keyboardIsVisible = false;
     _scaffoldKey = GlobalKey<ScaffoldState>();
     _translateService = TranslateService();
     _textFieldController = TextEditingController();
@@ -158,6 +209,12 @@ class _TranslateRouteState extends State<TranslateRoute>
     _curvedAnimation =
         CurvedAnimation(parent: _animationController, curve: Curves.easeInOut);
     _sweetSheet = SweetSheet();
+    // add listener for keyboard show/hide
+    KeyboardVisibilityNotification().addNewListener(
+      onChange: (bool visible) {
+        _onKeyboardVisibilityChanged(visible);
+      },
+    );
     // run after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusTextField();
@@ -166,7 +223,6 @@ class _TranslateRouteState extends State<TranslateRoute>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    print('calling didChangeAppLifecycleState...');
     if (state == AppLifecycleState.resumed) {
       // focus textField
       _textFieldController.text = _translateService.originalText;
@@ -276,48 +332,28 @@ class _TranslateRouteState extends State<TranslateRoute>
                 ),
               ),
               SizedBox(
-                height: 30,
+                height: 0,
               ),
-              Flexible(
-                flex: 1,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 32.0),
-                  child: _flippedView == FlippedView.front
-                      ? ButtonBar(
-                          alignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            NIconButton(
-                              icon: Icons.clear,
-                              onPressed: _clear,
-                            ),
-                            SizedBox(width: 10),
-                            NIconButton(
-                              icon: Icons.check,
-                              onPressed: _submit,
-                            ),
-                          ],
-                        )
-                      : ButtonBar(
-                          alignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            NIconButton(
-                              icon: Icons.edit,
-                              onPressed: _edit,
-                            ),
-                            SizedBox(width: 10),
-                            NIconButton(
-                              icon: Icons.refresh,
-                              onPressed: _reroll,
-                            ),
-                            SizedBox(width: 10),
-                            NIconButton(
-                              icon: Icons.content_copy,
-                              onPressed: _copy,
-                            ),
-                          ],
+              _keyboardIsVisible
+                  ? Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 32.0,
+                        vertical: 30,
+                      ),
+                      child: _buildButtonBar(_flippedView),
+                    )
+                  : Flexible(
+                      flex: 1,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          top: 30,
+                          right: 32,
+                          bottom: 0,
+                          left: 32,
                         ),
-                ),
-              ),
+                        child: _buildButtonBar(_flippedView),
+                      ),
+                    ),
             ],
           ),
         ),

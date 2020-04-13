@@ -35,7 +35,7 @@ class _TranslateRouteState extends State<TranslateRoute>
   void _submit() {
     if (_textFieldController.text.length == 0) {
       _showSnackBar(
-        title: 'Try again',
+        title: 'Oops...',
         description: 'Please type some text first.',
       );
       return;
@@ -185,7 +185,7 @@ class _TranslateRouteState extends State<TranslateRoute>
     }
   }
 
-    void _changeTheme(UsedTheme usedTheme) {
+  void _changeTheme(UsedTheme usedTheme) {
     NeumorphicTheme.of(context).usedTheme = usedTheme;
     bool toggleThemeValue;
     if (usedTheme == UsedTheme.DARK) {
@@ -218,6 +218,8 @@ class _TranslateRouteState extends State<TranslateRoute>
   Future _initTheme() async {
     bool themePrefIsDarkTheme = await _getThemePrefIsDarkTheme();
     if (themePrefIsDarkTheme == null) {
+      setState(
+          () => _themeToggleValue = NeumorphicTheme.of(context).isUsingDark);
       return null;
     }
     if (themePrefIsDarkTheme && !NeumorphicTheme.of(context).isUsingDark) {

@@ -214,18 +214,24 @@ class _TranslateRouteState extends State<TranslateRoute>
     );
   }
 
+  // set theme toggle/switch position
+  void _setThemeToggleValue(bool value) {
+    setState(() => _themeToggleValue = value);
+  }
+
   // load preferred theme from settings and apply
   Future _initTheme() async {
     bool themePrefIsDarkTheme = await _getThemePrefIsDarkTheme();
     if (themePrefIsDarkTheme == null) {
-      setState(
-          () => _themeToggleValue = NeumorphicTheme.of(context).isUsingDark);
-      return null;
-    }
-    if (themePrefIsDarkTheme && !NeumorphicTheme.of(context).isUsingDark) {
+      _setThemeToggleValue(NeumorphicTheme.of(context).isUsingDark);
+    } else if (themePrefIsDarkTheme &&
+        !NeumorphicTheme.of(context).isUsingDark) {
       _changeTheme(UsedTheme.DARK);
-    } else if (NeumorphicTheme.of(context).isUsingDark) {
+    } else if (!themePrefIsDarkTheme &&
+        NeumorphicTheme.of(context).isUsingDark) {
       _changeTheme(UsedTheme.LIGHT);
+    } else {
+      _setThemeToggleValue(NeumorphicTheme.of(context).isUsingDark);
     }
   }
 
@@ -290,6 +296,7 @@ class _TranslateRouteState extends State<TranslateRoute>
     });
     return Scaffold(
       key: _scaffoldKey,
+      backgroundColor: NeumorphicTheme.baseColor(context),
       body: NeumorphicBackground(
         child: SafeArea(
           child: Column(

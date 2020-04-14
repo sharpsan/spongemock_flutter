@@ -22,9 +22,12 @@ class _NAppBarState extends State<NAppBar> {
       centerTitle: true,
       backgroundColor: Colors.transparent,
       elevation: 0,
-      title: ClayContainer(
+      /// wrap in [AnimatedContainer] and match duration to settings of
+      /// [NeumorphicBackground] to maintain a consistent transition 
+      /// between themes (See [NeumorphicBackground] source)
+      title: AnimatedContainer(
         color: NeumorphicTheme.of(context).current.baseColor,
-        depth: 0,
+        duration: const Duration(milliseconds: 100),
         child: ClayText(
           widget.title,
           size: 30,

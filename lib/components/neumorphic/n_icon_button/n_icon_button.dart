@@ -1,23 +1,24 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:spongemock_flutter/utils/app_theme.dart';
 
 class NIconButton extends StatelessWidget {
-  final Function onPressed;
+  final VoidCallback? onPressed;
   final IconData icon;
-  final String tooltipMessage;
+  final String? tooltipMessage;
   NIconButton({
-    @required this.icon,
+    required this.icon,
     this.onPressed,
     this.tooltipMessage,
-  }) : assert(icon != null);
+  });
 
   Widget _buildButton(BuildContext context) {
+    final AppTheme theme = AppTheme(context);
     return NeumorphicButton(
       child: Icon(
         icon,
-        color: NeumorphicTheme.of(context).current.defaultTextColor,
+        color: theme.neomorphTheme?.current?.defaultTextColor,
       ),
-      onClick: onPressed,
+      onPressed: onPressed,
     );
   }
 

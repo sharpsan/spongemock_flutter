@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:spongemock_flutter/routes/translate_route.dart';
 
@@ -16,7 +15,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blueGrey,
       ),
       home: NeumorphicTheme(
-        usedTheme: UsedTheme.SYSTEM,
+        themeMode: ThemeMode.system,
         theme: NeumorphicThemeData(
           defaultTextColor: Color(0xFF3E3E3E),
           accentColor: Colors.blueGrey,

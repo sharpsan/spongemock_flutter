@@ -4,13 +4,13 @@ enum CharCase { uppercase, lowercase }
 
 class TranslateService {
   List<CharCase> _caseHistory = [];
-  String _text;
-  String _translation;
+  String? _text;
+  String? _translation;
 
-  String get translation => _translation;
+  String? get translation => _translation;
 
-  String get originalText => _text;
-  
+  String? get originalText => _text;
+
   set text(String text) {
     _text = text;
     _translate();
@@ -28,7 +28,7 @@ class TranslateService {
     _translation = null;
   }
 
-  // take text and randomly translate each character 
+  // take text and randomly translate each character
   // to either uppercase or lowercase
   //
   // case history is stored for each position as this
@@ -38,7 +38,7 @@ class TranslateService {
     Random _random = Random();
     int index = 0;
     String newTranslation = '';
-    _text?.split('')?.forEach((char) {
+    _text?.split('').forEach((char) {
       if (_caseHistory.length == 0 || index > _caseHistory.length - 1) {
         CharCase _case =
             CharCase.values[_random.nextInt(CharCase.values.length)];
